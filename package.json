@@ -1,0 +1,23 @@
+{
+  "name": "mqtt-listener",
+  "version": "1.0.0",
+  "description": "Cliente MQTT para escuchar mensajes de cooler_mqtt",
+  "main": "mqtt-listener.js",
+  "scripts": {
+    "start": "node mqtt-listener.js",
+    "publish": "node mqtt-publisher.js",
+    "listener": "node mqtt-listener.js",
+    "dashboard": "node server.js",
+    "export": "python3 export_to_csv.py",
+    "export-js": "node export-csv.js",
+    "explorer": "node mqtt-explorer-listener.js"
+  },
+  "keywords": ["mqtt", "listener", "cooler"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mqtt": "^5.3.4",
+    "express": "^4.18.2",
+    "socket.io": "^4.6.1"
+  }
+}
