@@ -1,16 +1,16 @@
 # 🌐 MQTT Explorer - Sistema de Monitoreo de Neveras Inteligentes
 
 **Desarrollado por:** ehernandez@labelgrup.com  
-**Proyecto:** SZCENDEX - Sistema de Análisis de Telemetría de Coolers
+**Proyecto:** SZENDEX - Sistema de Análisis de Telemetría de Coolers
 
 ---
 
 ## 🎯 ¿Qué es este proyecto?
 
-MQTT Explorer es un sistema completo para **monitorear, capturar y analizar** mensajes telemétricos de neveras inteligentes conectadas a través del protocolo MQTT. Este proyecto está íntimamente vinculado al **proyecto SZCENDEX**, donde se requiere un análisis exhaustivo de los datos de envío y comunicación de las neveras para optimizar la cadena de suministro y detectar anomalías en tiempo real.
+MQTT Explorer es un sistema completo para **monitorear, capturar y analizar** mensajes telemétricos de neveras inteligentes conectadas a través del protocolo MQTT. Este proyecto está íntimamente vinculado al **proyecto SZENDEX**, donde se requiere un análisis exhaustivo de los datos de envío y comunicación de las neveras para optimizar la cadena de suministro y detectar anomalías en tiempo real.
 
-### 🔗 Conexión con SZCENDEX
-SZCENDEX es nuestro sistema principal de gestión de logística inteligente para neveras. Este MQTT Explorer actúa como el **cerebro de monitoreo** que:
+### 🔗 Conexión con SZENDEX
+SZENDEX es nuestro sistema principal de gestión de logística inteligente para neveras. Este MQTT Explorer actúa como el **cerebro de monitoreo** que:
 - Captura todos los mensajes de telemetría de las neveras
 - Detecta gaps o interrupciones en las comunicaciones
 - Proporciona análisis detallados de patrones de conectividad
@@ -246,7 +246,7 @@ mqtt-explorer/
 ## 📞 Soporte
 
 **Desarrollador:** ehernandez@labelgrup.com  
-**Proyecto:** SZCENDEX  
+**Proyecto:** SZENDEX  
 **Repositorio:** Interno Labelgrup
 
 ---
@@ -262,6 +262,6 @@ mqtt-explorer/
 
 ---
 
-*Este sistema es fundamental para el correcto funcionamiento del proyecto SZCENDEX, proporcionando visibilidad completa sobre el estado de conectividad y salud de nuestra flota de neveras inteligentes.*
+*Este sistema es fundamental para el correcto funcionamiento del proyecto SZENDEX, proporcionando visibilidad completa sobre el estado de conectividad y salud de nuestra flota de neveras inteligentes.*
 # szendex-mqtt-explorer
 # szendex-mqtt-explorer
