@@ -13,6 +13,10 @@ node_modules/
 npm-debug.log*
 package-lock.json
 
+# Logs del sistema
+*.log
+logs/*.txt
+
 # Archivos temporales
 .DS_Store
 .vscode/
