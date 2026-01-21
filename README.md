@@ -232,17 +232,6 @@ mqtt-explorer/
 
 ---
 
-## 🚀 Roadmap y Extensiones
-
-### Posibles mejoras:
-- **Filtrado MQTT**: Regex en suscripción a topics específicos
-- **Compresión**: Gzip automático para archivos >100MB
-- **Base de datos**: SQLite/PostgreSQL para análisis más complejos
-- **Dashboard**: Interfaz web para monitoreo en tiempo real
-- **Alertas**: Notificaciones automáticas por gaps críticos
-
----
-
 ## 📞 Soporte
 
 **Desarrollador:** ehernandez@labelgrup.com  
@@ -263,5 +252,3 @@ mqtt-explorer/
 ---
 
 *Este sistema es fundamental para el correcto funcionamiento del proyecto SZENDEX, proporcionando visibilidad completa sobre el estado de conectividad y salud de las neveras inteligentes.*
-# szendex-mqtt-explorer
-# szendex-mqtt-explorer
