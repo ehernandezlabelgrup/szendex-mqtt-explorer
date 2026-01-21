@@ -1,7 +1,7 @@
 {
-  "name": "mqtt-listener",
+  "name": "szendex-mqtt-explorer",
   "version": "1.0.0",
-  "description": "Cliente MQTT para escuchar mensajes de cooler_mqtt",
+  "description": "Sistema completo para monitorear, capturar y analizar mensajes telemétricos de neveras inteligentes conectadas a través de MQTT. Parte integral del proyecto SZENDEX para gestión de logística inteligente.",
   "main": "mqtt-listener.js",
   "scripts": {
     "start": "node mqtt-listener.js",
