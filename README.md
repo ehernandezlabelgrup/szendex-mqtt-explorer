@@ -1,4 +1,5 @@
 ![SZENDEX Logo](logo-szendex.webp)
+![Labelgrup Logo](https://www.labelgrup.com/wp-content/uploads/2024/11/logo-labelgrup.png.webp)
 
 # 🌐 MQTT Explorer - Sistema de Monitoreo de Neveras Inteligentes
 
