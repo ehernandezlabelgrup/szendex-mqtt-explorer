@@ -15,7 +15,7 @@ package-lock.json
 
 # Logs del sistema
 *.log
-logs/*.txt
+logs/
 
 # Archivos temporales
 .DS_Store
