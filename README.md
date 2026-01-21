@@ -1,5 +1,4 @@
 ![SZENDEX Logo](logo-szendex.webp)
-![Labelgrup Logo](https://www.labelgrup.com/wp-content/uploads/2024/11/logo-labelgrup.png.webp)
 
 # 🌐 MQTT Explorer - Sistema de Monitoreo de Neveras Inteligentes
 
@@ -255,3 +254,5 @@ mqtt-explorer/
 ---
 
 *Este sistema es fundamental para el correcto funcionamiento del proyecto SZENDEX, proporcionando visibilidad completa sobre el estado de conectividad y salud de las neveras inteligentes.*
+
+<img src="https://www.labelgrup.com/wp-content/uploads/2024/11/logo-labelgrup.png.webp" alt="Labelgrup" width="120">
