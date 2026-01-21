@@ -1,3 +1,5 @@
+![SZENDEX Logo](logo-szendex.webp)
+
 # 🌐 MQTT Explorer - Sistema de Monitoreo de Neveras Inteligentes
 
 **Desarrollado por:** ehernandez@labelgrup.com  
