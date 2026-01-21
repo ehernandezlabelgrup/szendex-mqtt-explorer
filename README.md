@@ -264,3 +264,4 @@ mqtt-explorer/
 
 *Este sistema es fundamental para el correcto funcionamiento del proyecto SZCENDEX, proporcionando visibilidad completa sobre el estado de conectividad y salud de nuestra flota de neveras inteligentes.*
 # szendex-mqtt-explorer
+# szendex-mqtt-explorer
