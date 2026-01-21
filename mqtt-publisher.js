@@ -1,22 +1,32 @@
 const mqtt = require('mqtt');
+require('dotenv').config();
 
-// Configuración del broker MQTT
+// Configuración del broker MQTT desde variables de entorno
 const MQTT_CONFIG = {
-  host: 'ingestapro.thesmartdelivery.com',
-  port: 1883,
-  username: 'verneAgent',
-  password: 'LOIGK3xsdSGLJ',
+  host: process.env.MQTT_HOST,
+  port: parseInt(process.env.MQTT_PORT) || 1883,
+  username: process.env.MQTT_USERNAME,
+  password: process.env.MQTT_PASSWORD,
   clientId: `mqtt_publisher_${Math.random().toString(16).slice(3)}`
 };
 
 // SNUs de las neveras (UUIDs)
 const COOLERS = [
-  '0000010',
+  '019929bf-ee7f-7d05-a659-3532fe0d8802',
 ];
 
 // Coordenadas base (Granollers, Catalonia)
 const BASE_LAT = 42.0714;
 const BASE_LON = 2.8155;
+
+// Mapeo de SID por nevera (constante para cada una)
+const COOLER_SIDS = {
+  '019929bf-ee7f-7d05-a659-3532fe0d8802': '111111',
+};
+
+// DVS ciclo: 3 → 4 → 5 → 6 → 1
+const DVS_CYCLE = [3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 1, 1, 1];
+let dvsIndex = 0;
 
 console.log('🚀 Iniciando publicador MQTT...');
 console.log(`📡 Conectando a: ${MQTT_CONFIG.host}:${MQTT_CONFIG.port}`);
@@ -44,9 +54,12 @@ function generateCoolerData(snu) {
   const latVariation = (Math.random() - 0.5) * 0.01; // ±0.01 grados
   const lonVariation = (Math.random() - 0.5) * 0.01;
   
+  // Obtener DVS del ciclo actual
+  const currentDvs = DVS_CYCLE[dvsIndex % DVS_CYCLE.length];
+  
   return {
     SNU: snu,
-    SID: now - 7200, // Session ID (hace 2 horas)
+    SID: COOLER_SIDS[snu] || "100", // SID específico por nevera
     TSP: now, // Timestamp actual
     LON: parseFloat((BASE_LON + lonVariation).toFixed(4)),
     LAT: parseFloat((BASE_LAT + latVariation).toFixed(4)),
@@ -57,7 +70,7 @@ function generateCoolerData(snu) {
     BMV: 8000 + Math.floor(Math.random() * 1000), // Voltaje batería
     BPR: 90 + Math.floor(Math.random() * 10), // Porcentaje batería
     STS: 2500 + Math.floor(Math.random() * 100), // Status
-    LOG: 1, // Como solicitaste
+    LOG: 1, 
     SER: {
       MNT: 0,
       MXT: 1,
@@ -65,7 +78,7 @@ function generateCoolerData(snu) {
       ORE: 0,
       SHK: 0
     },
-    DVS: 1, // Como solicitaste
+    DVS: currentDvs, // Ciclo: 3 → 4 → 5 → 6 → 1
     RSS: 10 + Math.floor(Math.random() * 20), // Señal RSS
     BCN: 0,
     VLM: 0,
@@ -90,7 +103,10 @@ function publishMessage(snu) {
     } else {
       messageCount++;
       console.log(`✅ [${messageCount}] ${new Date().toISOString()} → ${topic.substring(0, 40)}...`);
-      console.log(`   TMP: ${payload.TMP}°C | BAT: ${payload.BPR}% | LAT: ${payload.LAT} | LON: ${payload.LON}`);
+      console.log(`   TMP: ${payload.TMP}°C | BAT: ${payload.BPR}% | DVS: ${payload.DVS} | SID: ${payload.SID}`);
+      
+      // Incrementar índice DVS después de cada mensaje
+      dvsIndex++;
     }
   });
 }

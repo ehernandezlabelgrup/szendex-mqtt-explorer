@@ -1,0 +1,23 @@
+# Archivos de entorno (credenciales)
+.env
+.env.local
+.env.*.local
+
+# Archivos de Copilot y configuración de IA
+.copilot/
+.github/copilot/
+*.copilot
+
+# Dependencias
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Archivos temporales
+.DS_Store
+.vscode/
+.idea/
+
+# Archivos de salida grandes
+*.csv
+gaps_report.txt

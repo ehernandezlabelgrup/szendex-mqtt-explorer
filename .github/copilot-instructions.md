@@ -1,199 +1,197 @@
-# MQTT Explorer - Instrucciones para AI Agents
+# MQTT Explorer - Guía para Agentes IA
 
-Sistema de monitoreo, análisis y exportación de mensajes MQTT para neveras inteligentes (coolers).
+Sistema para **monitoreo y análisis** de mensajes MQTT de neveras inteligentes (coolers).
 
-## Arquitectura del Sistema
+## 🎯 Propósito del Proyecto
 
-### Componentes Principales (3 modos independientes)
+Captura y análisis de datos telemétricos desde neveras inteligentes conectadas a MQTT, con tres interfaces principales:
+- **Listener**: Logging persistente (100MB rotación)
+- **Analizadores**: Scripts para búsqueda, análisis de gaps y reportes de servicios  
+- **Publicador**: Generador de datos de prueba
 
-1. **Listener Standalone** (`mqtt-listener.js`)
-   - Monitoreo pasivo con persistencia en disco
-   - Rotación automática de logs (100MB por archivo)
-   - Timestamps en hora local (no UTC)
-   - Reconexión automática en caso de fallo
+---
 
-2. **Dashboard Web** (`server.js` + `public/index.html`)
-   - Express + Socket.io para real-time
-   - Estadísticas en memoria (no persiste entre reinicios)
-   - Puerto 3000 por defecto
-   - También se conecta a MQTT y escucha mensajes
+## 📊 Arquitectura (3 Componentes Independientes)
 
-3. **Exportadores CSV** (Python y Node.js)
-   - Procesan logs de texto plano en `logs/`
-   - **Corrección automática timezone: UTC → UTC+1**
-   - Aplanamiento de JSON anidado (30+ columnas)
-   - Salida compatible con Excel
+### 1. **Listener Standalone** (`mqtt-listener.js`)
+- **Propósito**: Monitoreo pasivo y persistencia
+- **Almacenamiento**: `logs/mqtt_messages_YYYY-MM-DD_N.txt` (rotación a 100MB)
+- **Timestamps**: Hora local (no UTC) - usa `padStart()`, NO `toISOString()`
+- **Reconexión**: Automática cada 5 segundos si falla
 
-### Flujo de Datos
+### 2. **Analizadores de Datos** (Scripts de Análisis)
+- **search-logs.js**: Búsqueda avanzada por SID/SNU/TSP/LOG/DVS con filtros combinados
+- **check-service-gaps.js**: Análisis de gaps temporales para un SID específico
+- **report-all-gaps.js**: Reporte global de gaps de todos los SIDs con ranking
+- **export-gaps-report.js**: Exportador de reportes de gaps a CSV
+
+### 3. **Publicador de Pruebas** (`mqtt-publisher.js`)
+- **Propósito**: Generar datos falsos para testing
+- **Funcionalidad**: Simula múltiples neveras con datos realistas
 
 ```
 MQTT Broker (ingestaprod.thesmartdelivery.com:1883)
     ↓ Topic: cooler_mqtt/ics/#
-    ├─→ mqtt-listener.js → logs/mqtt_messages_YYYY-MM-DD_N.txt
-    └─→ server.js → WebSocket → Browser Dashboard
-         ↓
-    logs/*.txt → export-csv.js/export_to_csv.py → CSV files
+    ├→ mqtt-listener.js → logs/*.txt
+    └→ Análisis Scripts:
+       ├→ search-logs.js (filtrado por campos)
+       ├→ check-service-gaps.js (gaps de un SID)
+       ├→ report-all-gaps.js → gaps_report.txt
+       └→ export-gaps-report.js → CSV reports
 ```
 
-## Convenciones del Proyecto
+---
 
-### Configuración MQTT (hardcoded en todos los archivos)
+## 🔧 Flujos de Trabajo Clave
 
+### NPM Scripts (todos bloqueantes)
+```bash
+npm run listener     # Escucha MQTT + guarda logs
+npm run publish      # Publicador de pruebas (genera datos falsos)
+
+# 🔍 Análisis de Datos
+npm run search       # Buscar mensajes por SID/SNU/TSP/LOG/DVS
+npm run check-gaps   # Analizar gaps de un SID específico
+npm run report-gaps  # Reporte global de gaps de todos los SIDs
+npm run export-gaps  # Exportar reporte de gaps a CSV
+```
+
+### Configuración MQTT (Variables de entorno)
 ```javascript
+// Configuración desde .env
 const MQTT_CONFIG = {
-  host: 'ingestaprod.thesmartdelivery.com',
-  port: 1883,
-  username: 'verneAgent',
-  password: 'LOIGK3xsdSGLJ',
-  clientId: `mqtt_<componente>_${Math.random().toString(16).slice(3)}`
+  host: process.env.MQTT_HOST,
+  port: parseInt(process.env.MQTT_PORT) || 1883,
+  username: process.env.MQTT_USERNAME,
+  password: process.env.MQTT_PASSWORD,
+  clientId: `mqtt_<name>_${Math.random().toString(16).slice(3)}` // único por script
 };
 ```
 
-**Importante**: Cada script genera su propio `clientId` aleatorio para evitar colisiones.
-
-### Formato de Logs
-
-Los archivos en `logs/` siguen este formato:
-
+**Variables de entorno (.env):**
+```bash
+MQTT_HOST=your_mqtt_host.com
+MQTT_PORT=1883
+MQTT_USERNAME=your_username  
+MQTT_PASSWORD=your_password
 ```
-[YYYY-MM-DD HH:mm:ss.SSS] cooler_mqtt/ics/<uuid>
-{"SNU": "...", "TMP": 23.5, "LAT": 42.071, ...}
+
+**Nota**: Cada componente genera su propio `clientId` aleatorio para evitar conflictos.
+
+---
+
+## 📝 Patrones de Código Específicos
+
+### Formato de Archivos de Log
+```
+[2025-12-29 14:23:45.123] cooler_mqtt/ics/<uuid>
+{"SNU": "uuid", "TMP": 23.5, "LAT": 42.071, "LON": 2.815, ...}
 ================================================================================
 ```
+- Timestamps en hora **local** (no UTC)
+- Separadores de 80 caracteres `=`
+- JSON en línea única (sin formato)
 
-- Timestamps en hora local (no UTC)
-- Separadores de 80 caracteres (`=`)
-- JSON en línea única (sin formateo)
-
-### Rotación de Archivos
-
+### Rotación de Logs (100MB por archivo)
 ```javascript
-// mqtt-listener.js
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
-// Patrón: mqtt_messages_2025-12-29_1.txt
-//         mqtt_messages_2025-12-29_2.txt (al superar 100MB)
+const MAX_FILE_SIZE = 100 * 1024 * 1024;
+// mqtt_messages_2025-12-29_1.txt → _2.txt (cuando supera 100MB)
 ```
 
-Cuando `_1.txt` supera 100MB, se crea automáticamente `_2.txt`.
-
-## Comandos NPM Esenciales
-
-```bash
-npm run listener   # Monitoreo + guardado (bloqueante)
-npm run dashboard  # Web UI en :3000 (bloqueante)
-npm run publish    # Generador de datos de prueba (bloqueante)
-npm run export     # CSV con Python
-npm run export-js  # CSV con Node.js (preferido)
-```
-
-**Nota**: No hay comandos de build/test/lint configurados.
-
-## Patrones Específicos del Proyecto
-
-### 1. Manejo de Timestamps
-
-**Regla**: Siempre convertir UTC+1 al exportar, nunca al recibir.
+### Timestamps: Regla de Oro
+**NUNCA convertir UTC+1 al recibir. Usar hora local siempre.**
 
 ```javascript
-// CORRECTO (en mqtt-listener.js): guardar con hora local
+// ✓ CORRECTO: mqtt-listener.js usa hora local
 function getLocalTimestamp() {
   const now = new Date();
-  // Formateo manual con padStart, NO usar toISOString()
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
-}
-
-// CORRECTO (en export-csv.js): ajustar +1 hora para Excel
-function adjustTimestampToLocal(timestamp) {
-  date.setTime(date.getTime() + (60 * 60 * 1000)); // +1 hora
-  return date.toISOString().slice(0, 19).replace('T', ' ');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${ms}`;
 }
 ```
 
-### 2. Parsing de Logs
-
-Los exportadores usan **regex para extraer JSON**, no parseo línea a línea:
-
+### Parsing de JSON en Logs
 ```javascript
-// export-csv.js
+// Usar REGEX para extraer JSON de logs
 const match = line.match(/\{.*\}/);
-if (match) {
-  const jsonData = JSON.parse(match[0]);
-}
+if (match) JSON.parse(match[0]);
 ```
 
-### 3. Aplanamiento de Datos Anidados
+### Análisis de Datos y Gaps
+```bash
+# Búsqueda avanzada (filtros combinados AND)
+npm run search -- --sid=1768468839 --dvs=6
+npm run search -- --snu=019929c1-7ec6-7ae3-b456-a037c249c446 --log=1
 
-```javascript
-// export-csv.js: flattenJsonData()
-// Convierte {"SER": {"DEL": 123}} → {"SER_DEL": 123}
-// Arrays se convierten a JSON string
+# Análisis de gaps para SID específico
+npm run check-gaps -- --sid=1768991496 --gap=5
+
+# Reporte global de gaps (ordenado por gap máximo)
+npm run report-gaps -- --gap=4 --sort=max --detail=1768468839
 ```
 
-### 4. Socket.io en Dashboard
-
-```javascript
-// server.js
-io.emit('mqtt-message', { topic, payload, timestamp });
-io.emit('stats', stats); // Cada 5 segundos
-
-// index.html
-socket.on('mqtt-message', (data) => { /* actualizar UI */ });
+**Formato de Gaps en Reportes:**
+```
+SID: 1768468839 | Mensajes: 835 | Gaps: 16 | Máximo: 2910.15m | Promedio: 437.28m
+  Gap 1: 2910.15 minutos
+    ⬅️  Último:  2026-01-16 18:12:31.838 | LOG:1 | DVS:4
+    ➡️  Próximo: 2026-01-18 18:42:40.734 | LOG:1 | DVS:4
 ```
 
-## Debugging y Troubleshooting
+---
 
-### Verificar Conectividad MQTT
+## 🐛 Debugging Rápido
 
 ```bash
-# Si falla la conexión, verificar:
+# Ver conexión MQTT
 ping ingestaprod.thesmartdelivery.com
 telnet ingestaprod.thesmartdelivery.com 1883
-```
 
-### Inspeccionar Logs Guardados
-
-```bash
-# Ver últimos mensajes
+# Inspeccionar logs del día
 tail -f logs/mqtt_messages_$(date +%Y-%m-%d)_1.txt
-
-# Contar mensajes del día
 grep -c "^\[" logs/mqtt_messages_$(date +%Y-%m-%d)_1.txt
 ```
 
-### Puerto 3000 Ocupado
+---
 
-```bash
-# Cambiar PORT en server.js línea 12
-const PORT = 3000; // Modificar a otro valor
-```
-
-## Dependencias Críticas
+## 📦 Dependencias Críticas
 
 ```json
 {
-  "mqtt": "^5.3.4",        // Cliente MQTT
-  "express": "^4.18.2",    // Servidor web
-  "socket.io": "^4.6.1"    // WebSocket real-time
+  "mqtt": "^5.3.4",      // Cliente MQTT (reconexión automática)
+  "dotenv": "^16.x.x"    // Carga de variables de entorno
 }
 ```
+Sin dependencias de desarrollo (sin TypeScript, tests, ni linters).
 
-No hay dependencias de desarrollo (no TypeScript, no tests).
+---
 
-## Extensiones Futuras
+## ⚠️ Anti-Patrones Documentados (NO son bugs)
 
-Si se requiere modificar/extender:
+1. **Configuración por .env**: Credenciales SOLO en variables de entorno
+2. **Sin validación de esquema JSON**: Se acepta cualquier JSON válido
+3. **Manejo de errores básico**: Solo `console.error()`, sin reintentos complejos
 
-- **Añadir autenticación al dashboard**: Usar Express middleware
-- **Persistencia de estadísticas**: Usar base de datos (actualmente solo en memoria)
-- **Filtrado de mensajes**: Añadir regex en subscripción MQTT
-- **Exportación automática**: Usar cron + `export-csv.js`
+---
 
-## Anti-Patrones Actuales (documentados, no bugs)
+## 🚀 Extensiones Posibles
 
-1. **Credenciales hardcoded**: No usar variables de entorno
-2. **Sin manejo de errores robusto**: Logs básicos con `console.error`
-3. **Stats en memoria**: Se pierden al reiniciar `server.js`
-4. **No hay validación de esquema**: JSON se acepta tal cual
-5. **Dual exportador**: Python y Node.js hacen lo mismo
+- **Filtrado MQTT**: Regex en suscripción a topics
+- **Compresión de logs**: gzip automático para archivos >100MB
+- **Base de datos**: SQLite o PostgreSQL para análisis más complejos
 
-Estas son decisiones del proyecto actual, no errores a corregir.
+---
+
+## 📂 Estructura de Archivos Relevantes
+
+```
+mqtt-listener.js        → 244 líneas, listener principal
+mqtt-publisher.js       → 166 líneas, generador de pruebas
+logs/                   → Archivos de log rotados (100MB max)
+
+# Análisis de Datos
+search-logs.js          → 172 líneas, búsqueda por filtros
+check-service-gaps.js   → 193 líneas, análisis gaps por SID
+report-all-gaps.js      → 238 líneas, reporte global gaps
+export-gaps-report.js   → Exportador gaps a CSV
+gaps_report.txt         → Salida del reporte global
+```

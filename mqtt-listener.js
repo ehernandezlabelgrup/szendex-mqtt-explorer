@@ -1,13 +1,14 @@
 const mqtt = require('mqtt');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
 
-// Configuración del broker MQTT
+// Configuración del broker MQTT desde variables de entorno
 const MQTT_CONFIG = {
-  host: 'ingestaprod.thesmartdelivery.com',
-  port: 1883,
-  username: 'verneAgent',
-  password: 'LOIGK3xsdSGLJ',
+  host: process.env.MQTT_HOST,
+  port: parseInt(process.env.MQTT_PORT) || 1883,
+  username: process.env.MQTT_USERNAME,
+  password: process.env.MQTT_PASSWORD,
   clientId: `mqtt_listener_${Math.random().toString(16).slice(3)}`
 };
 
