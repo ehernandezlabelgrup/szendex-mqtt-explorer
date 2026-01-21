@@ -87,7 +87,7 @@ node -e "require('dotenv').config(); console.log('Host:', process.env.MQTT_HOST)
 
 ---
 
-## 📖 Guía de Uso (Para Dummies)
+## 📖 Guía de Uso Rápida
 
 ### 🎧 1. Escuchar mensajes en tiempo real
 ```bash
