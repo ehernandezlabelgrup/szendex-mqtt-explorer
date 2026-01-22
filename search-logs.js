@@ -24,14 +24,15 @@ if (Object.keys(filters).length === 0) {
   console.log('  npm run search -- --tsp=1768475007');
   console.log('  npm run search -- --log=1');
   console.log('  npm run search -- --dvs=6');
+  console.log('  npm run search -- --lid=12345');
   console.log('\n🔀 Combina múltiples filtros (AND):');
   console.log('  npm run search -- --sid=1768468839 --dvs=6');
-  console.log('  npm run search -- --snu=019929c1-7ec6-7ae3-b456-a037c249c446 --log=1\n');
+  console.log('  npm run search -- --lid=12345 --log=1\n');
   process.exit(1);
 }
 
 const LOGS_DIR = path.join(__dirname, 'logs');
-const validFields = ['sid', 'snu', 'tsp', 'log', 'dvs'];
+const validFields = ['sid', 'snu', 'tsp', 'log', 'dvs', 'lid'];
 
 // Validar que los filtros sean campos válidos
 const invalidFields = Object.keys(filters).filter(f => !validFields.includes(f));

@@ -115,8 +115,12 @@ npm run search -- --log=44
 # Buscar mensajes de un dispositivo específico (DVS)
 npm run search -- --dvs=6
 
+# Buscar por identificador de localización/lote (LID)
+npm run search -- --lid=12345
+
 # Combinar filtros
 npm run search -- --sid=1768468839 --dvs=6 --log=1
+npm run search -- --lid=12345 --dvs=4
 ```
 
 **¿Qué hace?** Te permite encontrar mensajes específicos sin revisar manualmente miles de líneas.
@@ -181,6 +185,7 @@ npm run publish
 - **SID**: ID de servicio (agrupa múltiples neveras)
 - **LOG**: Estado (1=normal, >1=problema)
 - **DVS**: Estado del dispositivo
+- **LID**: Identificador de localización/lote
 - **TMP**: Temperatura crítica para cadena de frío
 
 ---
