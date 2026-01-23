@@ -15,6 +15,7 @@ const MQTT_CONFIG = {
 // Topics a escuchar
 const TOPICS = [
   'cooler_mqtt/ics/#',
+  'cooler_update/ics/#',
   // Topics del sistema (si están habilitados en el broker)
   '$SYS/broker/clients/+',
   '$SYS/broker/subscriptions/+',
