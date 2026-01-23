@@ -103,6 +103,11 @@ function exportSidMessages() {
                     log: data.LOG || 'N/A',
                     dvs: data.DVS || 'N/A',
                     lid: data.LID || 'N/A',
+                    sts: data.STS || 'N/A',
+                    lgc: data.LGC || 'N/A',
+                    xst: data.XST || 'N/A',
+                    nst: data.NST || 'N/A',
+                    rss: data.RSS || 'N/A',
                     fullData: data
                   });
                 }
@@ -135,8 +140,8 @@ function exportSidMessages() {
     reportContent += `\n${'─'.repeat(100)}\n\n`;
 
     // Tabla de encabezados
-    reportContent += `${'Timestamp'.padEnd(25)} | ${'SNU'.padEnd(40)} | ${'TSP'.padEnd(15)} | ${'LOG'.padEnd(5)} | ${'DVS'.padEnd(5)} | ${'LID'.padEnd(10)}\n`;
-    reportContent += `${'-'.repeat(25)}-+-${'-'.repeat(40)}-+-${'-'.repeat(15)}-+-${'-'.repeat(5)}-+-${'-'.repeat(5)}-+-${'-'.repeat(10)}\n`;
+    reportContent += `${'Timestamp'.padEnd(25)} | ${'SNU'.padEnd(40)} | ${'TSP'.padEnd(15)} | ${'LOG'.padEnd(5)} | ${'DVS'.padEnd(5)} | ${'LID'.padEnd(10)} | ${'STS'.padEnd(10)} | ${'LGC'.padEnd(10)} | ${'XST'.padEnd(8)} | ${'NST'.padEnd(8)} | ${'RSS'.padEnd(5)}\n`;
+    reportContent += `${'-'.repeat(25)}-+-${'-'.repeat(40)}-+-${'-'.repeat(15)}-+-${'-'.repeat(5)}-+-${'-'.repeat(5)}-+-${'-'.repeat(10)}-+-${'-'.repeat(10)}-+-${'-'.repeat(10)}-+-${'-'.repeat(8)}-+-${'-'.repeat(8)}-+-${'-'.repeat(5)}\n`;
 
     // Agregar mensajes
     messages.forEach(msg => {
@@ -145,7 +150,12 @@ function exportSidMessages() {
       reportContent += `${String(msg.tsp).padEnd(15)} | `;
       reportContent += `${String(msg.log).padEnd(5)} | `;
       reportContent += `${String(msg.dvs).padEnd(5)} | `;
-      reportContent += `${String(msg.lid).padEnd(10)}\n`;
+      reportContent += `${String(msg.lid).padEnd(10)} | `;
+      reportContent += `${String(msg.sts).padEnd(10)} | `;
+      reportContent += `${String(msg.lgc).padEnd(10)} | `;
+      reportContent += `${String(msg.xst).padEnd(8)} | `;
+      reportContent += `${String(msg.nst).padEnd(8)} | `;
+      reportContent += `${String(msg.rss).padEnd(5)}\n`;
     });
 
     reportContent += `\n${'─'.repeat(100)}\n\n`;
@@ -155,6 +165,11 @@ function exportSidMessages() {
     reportContent += `  • LOG: 1=OK, >1=Error/Información del dispositivo\n`;
     reportContent += `  • DVS: Estado del dispositivo (1-7)\n`;
     reportContent += `  • LID: Identificador del mensaje\n`;
+    reportContent += `  • STS: Status del sistema\n`;
+    reportContent += `  • LGC: Logic counter (contador de lógica)\n`;
+    reportContent += `  • XST: Temperatura máxima alcanzada (°C)\n`;
+    reportContent += `  • NST: Temperatura mínima alcanzada (°C)\n`;
+    reportContent += `  • RSS: Señal de red (-dBm)\n`;
     reportContent += `\n${'═'.repeat(100)}\n`;
 
     fs.writeFileSync(reportPath, reportContent);
