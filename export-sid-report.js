@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * Exportador de Mensajes por SID
- * Busca todos los mensajes de un SID específico en los logs
+ * Exportador de Mensajes por SID o SNU
+ * Busca todos los mensajes de un SID o SNU específico en los logs
  * y los exporta a un archivo TXT detallado
  * 
- * Uso: npm run export-sid -- --sid=1768991496
+ * Uso: 
+ *   npm run export-sid -- --sid=1768991496
+ *   npm run export-sid -- --snu=019929bf-ee7e-7ea6-aa5b-8ac009fab1a6
  * 
  * Parámetros:
- * --sid=value     SID del servicio a exportar (OBLIGATORIO)
+ * --sid=value     SID del servicio a exportar
+ * --snu=value     SNU (serial) de la nevera a exportar
+ * (Debe proporcionar al menos uno)
  */
 
 const fs = require('fs');
@@ -28,19 +32,26 @@ args.forEach(arg => {
 });
 
 // Validar parámetro obligatorio
-if (!filters.sid) {
-  console.error('\n❌ Parámetro --sid es OBLIGATORIO\n');
-  console.error('Uso: npm run export-sid -- --sid=1768991496\n');
+if (!filters.sid && !filters.snu) {
+  console.error('\n❌ Debe especificar --sid o --snu\n');
+  console.error('Uso:\n');
+  console.error('  npm run export-sid -- --sid=1768991496\n');
+  console.error('  npm run export-sid -- --snu=019929bf-ee7e-7ea6-aa5b-8ac009fab1a6\n');
   process.exit(1);
 }
 
-const targetSid = parseInt(filters.sid);
+const targetSid = filters.sid ? parseInt(filters.sid) : null;
+const targetSnu = filters.snu || null;
 
 console.log(`\n${'━'.repeat(80)}`);
-console.log(`📊 EXPORTADOR DE MENSAJES POR SID`);
+console.log(`📊 EXPORTADOR DE MENSAJES`);
 console.log(`${'━'.repeat(80)}`);
 console.log(`\n  Parámetros:`);
-console.log(`  • SID objetivo: ${targetSid}\n`);
+if (targetSid) {
+  console.log(`  • SID objetivo: ${targetSid}\n`);
+} else {
+  console.log(`  • SNU objetivo: ${targetSnu}\n`);
+}
 
 // Obtener archivos de log
 function exportSidMessages() {
@@ -88,8 +99,16 @@ function exportSidMessages() {
               if (jsonMatch) {
                 const data = JSON.parse(jsonMatch[0]);
 
-                // Verificar si el SID coincide
-                if (parseInt(data.SID) === targetSid) {
+                // Verificar si el SID o SNU coinciden
+                let matches = false;
+                if (targetSid && parseInt(data.SID) === targetSid) {
+                  matches = true;
+                }
+                if (targetSnu && data.SNU === targetSnu) {
+                  matches = true;
+                }
+
+                if (matches) {
                   totalMessages++;
 
                   // Extraer timestamp de la línea de timestamp
@@ -121,17 +140,19 @@ function exportSidMessages() {
     });
 
     if (totalMessages === 0) {
-      console.warn(`⚠️  No se encontraron mensajes para SID: ${targetSid}`);
+      const searchType = targetSid ? `SID: ${targetSid}` : `SNU: ${targetSnu}`;
+      console.warn(`⚠️  No se encontraron mensajes para ${searchType}`);
       process.exit(0);
     }
 
     // Generar archivo de reporte
-    const reportFileName = `sid_${targetSid}.txt`;
+    const reportFileName = targetSid ? `sid_${targetSid}.txt` : `snu_${targetSnu.slice(0, 8)}_${targetSnu.slice(-8)}.txt`;
     const reportPath = path.join(EXPORT_DIR, reportFileName);
 
     let reportContent = '';
     reportContent += `${'═'.repeat(100)}\n`;
-    reportContent += `REPORTE DE MENSAJES - SID: ${targetSid}\n`;
+    const title = targetSid ? `REPORTE DE MENSAJES - SID: ${targetSid}` : `REPORTE DE MENSAJES - SNU: ${targetSnu}`;
+    reportContent += `${title}\n`;
     reportContent += `${'═'.repeat(100)}\n\n`;
     reportContent += `📊 Resumen:\n`;
     reportContent += `  • Total de mensajes: ${totalMessages}\n`;
