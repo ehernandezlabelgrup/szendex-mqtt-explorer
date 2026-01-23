@@ -115,8 +115,13 @@ function exportSidMessages() {
                   const timestampMatch = line.match(/\[(.*?)\]/);
                   const timestamp = timestampMatch ? timestampMatch[1] : 'N/A';
 
+                  // Extraer topic: está entre ] y el siguiente espacio/salto de línea
+                  const topicMatch = line.match(/\]\s+(.+?)$/);
+                  const topic = topicMatch ? topicMatch[1].trim() : 'N/A';
+
                   messages.push({
                     timestamp,
+                    topic,
                     snu: data.SNU || 'N/A',
                     tsp: data.TSP || 'N/A',
                     log: data.LOG || 'N/A',
@@ -161,12 +166,13 @@ function exportSidMessages() {
     reportContent += `\n${'─'.repeat(100)}\n\n`;
 
     // Tabla de encabezados
-    reportContent += `${'Timestamp'.padEnd(25)} | ${'SNU'.padEnd(40)} | ${'TSP'.padEnd(15)} | ${'LOG'.padEnd(5)} | ${'DVS'.padEnd(5)} | ${'LID'.padEnd(10)} | ${'STS'.padEnd(10)} | ${'LGC'.padEnd(10)} | ${'XST'.padEnd(8)} | ${'NST'.padEnd(8)} | ${'RSS'.padEnd(5)}\n`;
-    reportContent += `${'-'.repeat(25)}-+-${'-'.repeat(40)}-+-${'-'.repeat(15)}-+-${'-'.repeat(5)}-+-${'-'.repeat(5)}-+-${'-'.repeat(10)}-+-${'-'.repeat(10)}-+-${'-'.repeat(10)}-+-${'-'.repeat(8)}-+-${'-'.repeat(8)}-+-${'-'.repeat(5)}\n`;
+    reportContent += `${'Timestamp'.padEnd(25)} | ${'Topic'.padEnd(45)} | ${'SNU'.padEnd(40)} | ${'TSP'.padEnd(15)} | ${'LOG'.padEnd(5)} | ${'DVS'.padEnd(5)} | ${'LID'.padEnd(10)} | ${'STS'.padEnd(10)} | ${'LGC'.padEnd(10)} | ${'XST'.padEnd(8)} | ${'NST'.padEnd(8)} | ${'RSS'.padEnd(5)}\n`;
+    reportContent += `${'-'.repeat(25)}-+-${'-'.repeat(45)}-+-${'-'.repeat(40)}-+-${'-'.repeat(15)}-+-${'-'.repeat(5)}-+-${'-'.repeat(5)}-+-${'-'.repeat(10)}-+-${'-'.repeat(10)}-+-${'-'.repeat(10)}-+-${'-'.repeat(8)}-+-${'-'.repeat(8)}-+-${'-'.repeat(5)}\n`;
 
     // Agregar mensajes
     messages.forEach(msg => {
       reportContent += `${msg.timestamp.padEnd(25)} | `;
+      reportContent += `${String(msg.topic).padEnd(45)} | `;
       reportContent += `${String(msg.snu).padEnd(40)} | `;
       reportContent += `${String(msg.tsp).padEnd(15)} | `;
       reportContent += `${String(msg.log).padEnd(5)} | `;
@@ -182,6 +188,7 @@ function exportSidMessages() {
     reportContent += `\n${'─'.repeat(100)}\n\n`;
     reportContent += `📝 Notas:\n`;
     reportContent += `  • Timestamp: Hora de recepción del mensaje por MQTT\n`;
+    reportContent += `  • Topic: Topic MQTT del que se recibió el mensaje (ej: cooler_mqtt/ics/<uuid>)\n`;
     reportContent += `  • TSP: Timestamp Unix de creación del mensaje en el dispositivo\n`;
     reportContent += `  • LOG: 1=OK, >1=Error/Información del dispositivo\n`;
     reportContent += `  • DVS: Estado del dispositivo (1-7)\n`;
