@@ -150,10 +150,11 @@ function exportSidMessages() {
 
     reportContent += `\n${'─'.repeat(100)}\n\n`;
     reportContent += `📝 Notas:\n`;
-    reportContent += `  • LOG: 1=OK, >1=Error/Problema\n`;
-    reportContent += `  • DVS: Estado del dispositivo (1-6)\n`;
-    reportContent += `  • TSP: Timestamp Unix del mensaje\n`;
-    reportContent += `  • LID: Identificador de localización/lote\n`;
+    reportContent += `  • Timestamp: Hora de recepción del mensaje por MQTT\n`;
+    reportContent += `  • TSP: Timestamp Unix de creación del mensaje en el dispositivo\n`;
+    reportContent += `  • LOG: 1=OK, >1=Error/Información del dispositivo\n`;
+    reportContent += `  • DVS: Estado del dispositivo (1-7)\n`;
+    reportContent += `  • LID: Identificador del mensaje\n`;
     reportContent += `\n${'═'.repeat(100)}\n`;
 
     fs.writeFileSync(reportPath, reportContent);

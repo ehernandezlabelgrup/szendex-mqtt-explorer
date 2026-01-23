@@ -220,6 +220,13 @@ Timestamp               | SNU                                      | TSP        
 -----------------------+-----------------------------------------+-----------------+-------+-------+----------
 2026-01-20 10:00:05.123 | 019929bf-ee7e-7ea6-aa5b-8ac009fab1a6   | 1769079028      | 1     | 4     | 12345
 2026-01-20 10:01:12.456 | 019929bf-ee7e-7ea6-aa5b-8ac009fab1a6   | 1769079085      | 1     | 5     | 12345
+
+📝 Notas:
+  • Timestamp: Hora de recepción del mensaje por MQTT
+  • TSP: Timestamp Unix de creación del mensaje en el dispositivo
+  • LOG: 1=OK, >1=Error/Información del dispositivo
+  • DVS: Estado del dispositivo (1-7)
+  • LID: Identificador del mensaje
 ```
 
 **Formato de Gaps en Reportes:**
@@ -322,10 +329,10 @@ Sin dependencias de desarrollo (sin TypeScript, tests, ni linters).
 
 ### Campos Críticos para Análisis
 - **SID**: Identificador principal para análisis de gaps y servicios
-- **TSP**: Timestamp para cálculos temporales (Unix time)
-- **LOG**: Indicador de errores (valores >1 indican problemas)
-- **DVS**: Estado del dispositivo (crítico para análisis operacional)
-- **LID**: Identificador de localización/lote (nuevo campo)
+- **TSP**: Timestamp Unix de creación del mensaje en el dispositivo
+- **LOG**: Indicador de estado (1=OK, >1=Error/Información)
+- **DVS**: Estado del dispositivo (1-7)
+- **LID**: Identificador del mensaje
 - **TMP**: Temperatura actual (monitoreo de cadena de frío)
 
 ---
