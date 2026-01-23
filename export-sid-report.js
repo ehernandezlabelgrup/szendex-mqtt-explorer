@@ -121,7 +121,7 @@ function exportSidMessages() {
     }
 
     // Generar archivo de reporte
-    const reportFileName = `sid_${targetSid}_export_${new Date().toISOString().split('T')[0]}_${Date.now()}.txt`;
+    const reportFileName = `sid_${targetSid}.txt`;
     const reportPath = path.join(EXPORT_DIR, reportFileName);
 
     let reportContent = '';
