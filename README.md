@@ -125,7 +125,23 @@ npm run search -- --lid=12345 --dvs=4
 
 **¿Qué hace?** Te permite encontrar mensajes específicos sin revisar manualmente miles de líneas.
 
-### 📊 3. Detectar problemas de conectividad
+### � 2b. Exportar todos los mensajes de un SID a TXT
+```bash
+# Exportar todos los mensajes de un SID específico
+npm run export-sid -- --sid=1768468839
+
+# Genera un archivo TXT con:
+# • Hora de recepción
+# • SNU (ID de la nevera)
+# • TSP (timestamp del mensaje)
+# • LOG (estado)
+# • DVS (estado del dispositivo)
+# • LID (identificador de lote)
+```
+
+**¿Qué hace?** Crea un reporte detallado en TXT con todos los mensajes de un SID, útil para auditoría y análisis profundo.
+
+### �📊 3. Detectar problemas de conectividad
 ```bash
 # Analizar gaps de una nevera específica (gaps > 5 minutos)
 npm run check-gaps -- --sid=1768468839 --gap=5
@@ -199,7 +215,8 @@ mqtt-explorer/
 ├── 📄 search-logs.js            # Buscador avanzado (172 líneas)
 ├── 📄 check-service-gaps.js     # Análisis gaps por SID (193 líneas)
 ├── 📄 report-all-gaps.js        # Reporte global (238 líneas)
-├── 📄 export-gaps-report.js     # Exportador CSV
+├── 📄 export-gaps-report.js     # Exportador gaps a CSV
+├── 📄 export-sid-report.js      # Exportador mensajes por SID
 ├── 📂 logs/                     # Archivos de log (rotación 100MB)
 ├── 📄 .env                      # Credenciales (NO subir a Git)
 ├── 📄 .env.example             # Plantilla de configuración

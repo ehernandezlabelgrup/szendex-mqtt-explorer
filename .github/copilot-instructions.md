@@ -52,10 +52,11 @@ npm run listener     # Escucha MQTT + guarda logs
 npm run publish      # Publicador de pruebas (genera datos falsos)
 
 # 🔍 Análisis de Datos
-npm run search       # Buscar mensajes por SID/SNU/TSP/LOG/DVS
+npm run search       # Buscar mensajes por SID/SNU/TSP/LOG/DVS/LID
 npm run check-gaps   # Analizar gaps de un SID específico
 npm run report-gaps  # Reporte global de gaps de todos los SIDs
 npm run export-gaps  # Exportar reporte de gaps a CSV
+npm run export-sid   # Exportar todos los mensajes de un SID a TXT
 ```
 
 ### Configuración MQTT (Variables de entorno)
@@ -192,11 +193,33 @@ npm run search -- --sid=1768468839 --dvs=6
 npm run search -- --snu=019929c1-7ec6-7ae3-b456-a037c249c446 --log=1
 npm run search -- --lid=12345 --dvs=4
 
+# Exportar todos los mensajes de un SID a TXT
+npm run export-sid -- --sid=1768468839
+
 # Análisis de gaps para SID específico
 npm run check-gaps -- --sid=1768991496 --gap=5
 
 # Reporte global de gaps (ordenado por gap máximo)
 npm run report-gaps -- --gap=4 --sort=max --detail=1768468839
+```
+
+**Formato de Exportación SID (export-sid):**
+```
+═══════════════════════════════════════════════════════════════════════
+REPORTE DE MENSAJES - SID: 1768468839
+═══════════════════════════════════════════════════════════════════════
+
+📊 Resumen:
+  • Total de mensajes: 150
+  • Rango temporal: 2026-01-20 10:00:00.000 → 2026-01-22 15:30:45.123
+  • Dispositivos únicos (SNU): 2
+
+──────────────────────────────────────────────────────────────────────
+
+Timestamp               | SNU                                      | TSP            | LOG   | DVS   | LID
+-----------------------+-----------------------------------------+-----------------+-------+-------+----------
+2026-01-20 10:00:05.123 | 019929bf-ee7e-7ea6-aa5b-8ac009fab1a6   | 1769079028      | 1     | 4     | 12345
+2026-01-20 10:01:12.456 | 019929bf-ee7e-7ea6-aa5b-8ac009fab1a6   | 1769079085      | 1     | 5     | 12345
 ```
 
 **Formato de Gaps en Reportes:**

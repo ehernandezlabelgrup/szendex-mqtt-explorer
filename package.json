@@ -11,7 +11,8 @@
     "search": "node search-logs.js",
     "check-gaps": "node check-service-gaps.js",
     "report-gaps": "node report-all-gaps.js",
-    "export-gaps": "node export-gaps-report.js"
+    "export-gaps": "node export-gaps-report.js",
+    "export-sid": "node export-sid-report.js"
   },
   "keywords": [
     "mqtt",
