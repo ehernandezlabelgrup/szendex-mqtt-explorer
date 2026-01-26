@@ -16,17 +16,7 @@ const MQTT_CONFIG = {
 const TOPICS = [
   'cooler_mqtt/ics/#',
   'cooler_update/ics/#',
-  // Topics del sistema (si están habilitados en el broker)
-  '$SYS/broker/clients/+',
-  '$SYS/broker/subscriptions/+',
-  '$SYS/broker/connection/+',
-  '$SYS/broker/log',
-  // Topics comunes de Last Will Testament
-  'clients/+/status',
-  'devices/+/lwt',
-  // Topics de estado general
-  '+/status',
-  '+/+/status'
+
 ];
 
 // Configuración de archivos de log con rotación
@@ -148,7 +138,7 @@ client.on('connect', (connack) => {
 client.on('message', (topic, message, packet) => {
   const timestamp = getLocalTimestamp(); // Hora local en lugar de UTC
   const payload = message.toString();
-  
+  console.log(packet)
   // 💾 GUARDAR MENSAJE EN ARCHIVO
   saveMessageToFile(topic, message, timestamp);
   

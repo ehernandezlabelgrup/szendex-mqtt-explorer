@@ -123,6 +123,7 @@ function exportSidMessages() {
                     timestamp,
                     topic,
                     snu: data.SNU || 'N/A',
+                    sid: data.SID || 'N/A',
                     tsp: data.TSP || 'N/A',
                     log: data.LOG || 'N/A',
                     dvs: data.DVS || 'N/A',
@@ -166,29 +167,30 @@ function exportSidMessages() {
     reportContent += `\n${'─'.repeat(100)}\n\n`;
 
     // Tabla de encabezados
-    reportContent += `${'Timestamp'.padEnd(25)} | ${'Topic'.padEnd(45)} | ${'SNU'.padEnd(40)} | ${'TSP'.padEnd(15)} | ${'LOG'.padEnd(5)} | ${'DVS'.padEnd(5)} | ${'LID'.padEnd(10)} | ${'STS'.padEnd(10)} | ${'LGC'.padEnd(10)} | ${'XST'.padEnd(8)} | ${'NST'.padEnd(8)} | ${'RSS'.padEnd(5)}\n`;
-    reportContent += `${'-'.repeat(25)}-+-${'-'.repeat(45)}-+-${'-'.repeat(40)}-+-${'-'.repeat(15)}-+-${'-'.repeat(5)}-+-${'-'.repeat(5)}-+-${'-'.repeat(10)}-+-${'-'.repeat(10)}-+-${'-'.repeat(10)}-+-${'-'.repeat(8)}-+-${'-'.repeat(8)}-+-${'-'.repeat(5)}\n`;
+    reportContent += `${'Timestamp'.padEnd(23)} | ${'Topic'.padEnd(50)} | ${'SID'.padEnd(12)} | ${'TSP'.padEnd(12)} | ${'LOG'.padEnd(4)} | ${'DVS'.padEnd(4)} | ${'LID'.padEnd(8)} | ${'STS'.padEnd(8)} | ${'LGC'.padEnd(9)} | ${'XST'.padEnd(6)} | ${'NST'.padEnd(6)} | ${'RSS'.padEnd(4)}\n`;
+    reportContent += `${'-'.repeat(23)}-+-${'-'.repeat(50)}-+-${'-'.repeat(12)}-+-${'-'.repeat(12)}-+-${'-'.repeat(4)}-+-${'-'.repeat(4)}-+-${'-'.repeat(8)}-+-${'-'.repeat(8)}-+-${'-'.repeat(9)}-+-${'-'.repeat(6)}-+-${'-'.repeat(6)}-+-${'-'.repeat(4)}\n`;
 
     // Agregar mensajes
     messages.forEach(msg => {
-      reportContent += `${msg.timestamp.padEnd(25)} | `;
-      reportContent += `${String(msg.topic).padEnd(45)} | `;
-      reportContent += `${String(msg.snu).padEnd(40)} | `;
-      reportContent += `${String(msg.tsp).padEnd(15)} | `;
-      reportContent += `${String(msg.log).padEnd(5)} | `;
-      reportContent += `${String(msg.dvs).padEnd(5)} | `;
-      reportContent += `${String(msg.lid).padEnd(10)} | `;
-      reportContent += `${String(msg.sts).padEnd(10)} | `;
-      reportContent += `${String(msg.lgc).padEnd(10)} | `;
-      reportContent += `${String(msg.xst).padEnd(8)} | `;
-      reportContent += `${String(msg.nst).padEnd(8)} | `;
-      reportContent += `${String(msg.rss).padEnd(5)}\n`;
+      reportContent += `${String(msg.timestamp).padEnd(23)} | `;
+      reportContent += `${String(msg.topic).slice(0, 50).padEnd(50)} | `;
+      reportContent += `${String(msg.sid).padEnd(12)} | `;
+      reportContent += `${String(msg.tsp).padEnd(12)} | `;
+      reportContent += `${String(msg.log).padEnd(4)} | `;
+      reportContent += `${String(msg.dvs).padEnd(4)} | `;
+      reportContent += `${String(msg.lid).padEnd(8)} | `;
+      reportContent += `${String(msg.sts).padEnd(8)} | `;
+      reportContent += `${String(msg.lgc).padEnd(9)} | `;
+      reportContent += `${String(msg.xst).padEnd(6)} | `;
+      reportContent += `${String(msg.nst).padEnd(6)} | `;
+      reportContent += `${String(msg.rss).padEnd(4)}\n`;
     });
 
     reportContent += `\n${'─'.repeat(100)}\n\n`;
     reportContent += `📝 Notas:\n`;
     reportContent += `  • Timestamp: Hora de recepción del mensaje por MQTT\n`;
     reportContent += `  • Topic: Topic MQTT del que se recibió el mensaje (ej: cooler_mqtt/ics/<uuid>)\n`;
+    reportContent += `  • SID: Service ID - identificador del servicio logístico\n`;
     reportContent += `  • TSP: Timestamp Unix de creación del mensaje en el dispositivo\n`;
     reportContent += `  • LOG: 1=OK, >1=Error/Información del dispositivo\n`;
     reportContent += `  • DVS: Estado del dispositivo (1-7)\n`;
