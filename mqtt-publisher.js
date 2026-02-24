@@ -1,4 +1,6 @@
 const mqtt = require('mqtt');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 // Configuración del broker MQTT desde variables de entorno
@@ -21,12 +23,23 @@ const BASE_LON = 2.8155;
 
 // Mapeo de SID por nevera (constante para cada una)
 const COOLER_SIDS = {
-  '019929bf-ee7f-7d05-a659-3532fe0d8802': '111111',
+  '019929bf-ee7f-7d05-a659-3532fe0d8802': null, // Se asignará en tiempo de ejecución
 };
 
-// DVS ciclo: 3 → 4 → 5 → 6 → 1
-const DVS_CYCLE = [3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 1, 1, 1];
-let dvsIndex = 0;
+// Cargar patrones de mensajes desde archivo de configuración
+const configPath = path.join(__dirname, 'messages-config.json');
+let MESSAGE_PATTERNS = [];
+
+try {
+  const configData = fs.readFileSync(configPath, 'utf8');
+  MESSAGE_PATTERNS = JSON.parse(configData);
+  console.log(`📋 Patrones cargados desde: messages-config.json (${MESSAGE_PATTERNS.length} patrones)\n`);
+} catch (error) {
+  console.error('❌ Error al cargar messages-config.json:', error.message);
+  process.exit(1);
+}
+
+let patternIndex = 0;
 
 console.log('🚀 Iniciando publicador MQTT...');
 console.log(`📡 Conectando a: ${MQTT_CONFIG.host}:${MQTT_CONFIG.port}`);
@@ -44,6 +57,7 @@ const client = mqtt.connect(`mqtt://${MQTT_CONFIG.host}:${MQTT_CONFIG.port}`, {
 
 // Contador de mensajes
 let messageCount = 0;
+let acksReceived = 0;
 let intervalIds = [];
 
 // Función para generar datos realistas de nevera
@@ -54,8 +68,10 @@ function generateCoolerData(snu) {
   const latVariation = (Math.random() - 0.5) * 0.01; // ±0.01 grados
   const lonVariation = (Math.random() - 0.5) * 0.01;
   
-  // Obtener DVS del ciclo actual
-  const currentDvs = DVS_CYCLE[dvsIndex % DVS_CYCLE.length];
+  // Obtener patrón actual (DVS y LOG)
+  const pattern = MESSAGE_PATTERNS[patternIndex];
+  const currentDvs = pattern.dvs;
+  const currentLog = pattern.log;
   
   return {
     SNU: snu,
@@ -70,7 +86,7 @@ function generateCoolerData(snu) {
     BMV: 8000 + Math.floor(Math.random() * 1000), // Voltaje batería
     BPR: 90 + Math.floor(Math.random() * 10), // Porcentaje batería
     STS: 2500 + Math.floor(Math.random() * 100), // Status
-    LOG: 1, 
+    LOG: currentLog,                 // Log del patrón actual
     SER: {
       MNT: 0,
       MXT: 1,
@@ -78,7 +94,7 @@ function generateCoolerData(snu) {
       ORE: 0,
       SHK: 0
     },
-    DVS: currentDvs, // Ciclo: 3 → 4 → 5 → 6 → 1
+    DVS: currentDvs,                 // DVS del patrón actual
     RSS: 10 + Math.floor(Math.random() * 20), // Señal RSS
     BCN: 0,
     VLM: 0,
@@ -97,16 +113,31 @@ function publishMessage(snu) {
   const payload = generateCoolerData(snu);
   const message = JSON.stringify(payload);
   
-  client.publish(topic, message, { qos: 0 }, (err) => {
+  const sendTime = Date.now();
+  
+  client.publish(topic, message, { qos: 1 }, (err) => {
     if (err) {
       console.error(`❌ Error publicando en ${topic}:`, err.message);
     } else {
+      // Con QoS 1, este callback se ejecuta cuando se RECIBE el PUBACK del broker
+      const ackTime = Date.now();
+      const latency = ackTime - sendTime;
       messageCount++;
-      console.log(`✅ [${messageCount}] ${new Date().toISOString()} → ${topic.substring(0, 40)}...`);
-      console.log(`   TMP: ${payload.TMP}°C | BAT: ${payload.BPR}% | DVS: ${payload.DVS} | SID: ${payload.SID}`);
+      acksReceived++;
       
-      // Incrementar índice DVS después de cada mensaje
-      dvsIndex++;
+      const pattern = MESSAGE_PATTERNS[patternIndex];
+      console.log(`✅ [${messageCount}/${MESSAGE_PATTERNS.length}] ${new Date().toISOString()} → DVS:${payload.DVS} | LOG:${payload.LOG}`);
+      console.log(`   TMP: ${payload.TMP}°C | BAT: ${payload.BPR}% | SID: ${payload.SID} | 📨 ACK recibido en ${latency}ms`);
+      
+      // Avanzar al siguiente patrón
+      patternIndex++;
+      
+      // Si llegamos al final de los patrones
+      if (patternIndex >= MESSAGE_PATTERNS.length) {
+        console.log(`\n\n✅✅✅ ¡TODOS LOS ${MESSAGE_PATTERNS.length} MENSAJES COMPLETADOS!`);
+        console.log(`📊 ACKs recibidos: ${acksReceived}/${messageCount}\n`);
+        cleanup();
+      }
     }
   });
 }
@@ -114,19 +145,23 @@ function publishMessage(snu) {
 // Evento: Conexión exitosa
 client.on('connect', () => {
   console.log('✅ Conectado al broker MQTT\n');
-  console.log(`📦 Enviando mensajes a ${COOLERS.length} neveras cada 1 segundo...`);
-  console.log(`🎯 Topics: cooler_mqtt/ics/[UUID]\n`);
+  
+  // Asignar timestamp actual como SID
+  const executionTimestamp = Math.floor(Date.now() / 1000);
+  COOLER_SIDS['019929bf-ee7f-7d05-a659-3532fe0d8802'] = executionTimestamp.toString();
+  console.log(`🔢 SID asignado (timestamp): ${executionTimestamp}`);
+  console.log(`📋 Total mensajes a enviar: ${MESSAGE_PATTERNS.length}\n`);
   
   // Publicar mensaje inicial inmediatamente para cada nevera
   COOLERS.forEach(snu => {
     publishMessage(snu);
   });
   
-  // Configurar intervalos para cada nevera (1 mensaje por segundo)
+  // Configurar intervalos para cada nevera (1 mensaje cada 1.5 segundos)
   COOLERS.forEach(snu => {
     const intervalId = setInterval(() => {
       publishMessage(snu);
-    }, 2000);
+    }, 1500);
     intervalIds.push(intervalId);
   });
   
@@ -159,7 +194,14 @@ client.on('offline', () => {
 // Manejo de señales para cerrar limpiamente
 function cleanup() {
   console.log('\n\n👋 Deteniendo generador...');
-  console.log(`📊 Total de mensajes enviados: ${messageCount}`);
+  console.log(`📊 Total enviados: ${messageCount}`);
+  console.log(`📨 ACKs recibidos: ${acksReceived}/${messageCount}`);
+  
+  if (acksReceived === messageCount) {
+    console.log(`✅ Confirmación 100% - Todos los mensajes foram entregados\n`);
+  } else {
+    console.log(`⚠️  Solo se confirmaron ${acksReceived} de ${messageCount} mensajes\n`);
+  }
   
   // Limpiar intervalos
   intervalIds.forEach(id => clearInterval(id));

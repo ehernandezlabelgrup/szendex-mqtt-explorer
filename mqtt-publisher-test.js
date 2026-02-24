@@ -12,7 +12,7 @@ const MQTT_CONFIG = {
 
 // SNU de prueba (nevera específica)
 const TEST_SNU = '019929bf-ee7f-7d05-a659-3532fe0d8802';
-const TEST_SID = '11';
+const TEST_SID = '300000005';
 
 // Coordenadas base (Granollers, Catalonia)
 const BASE_LAT = 42.0714;
@@ -104,13 +104,13 @@ client.on('connect', () => {
   // Mensaje 2: LOG 11, DVS 3 (enviado 1 segundo después)
   setTimeout(() => {
     publishMessage(11, 3, 2);
-  }, 500);
+  }, 100);
   
   // Cerrar después de 2 segundos (para asegurar que ambos se enviaron)
   setTimeout(() => {
     console.log('✅ Test completado. Terminando...\n');
     cleanup();
-  }, 2500);
+  }, 100);
 });
 
 // Evento: Error
@@ -142,7 +142,7 @@ function cleanup() {
     process.exit(0);
   });
   
-  setTimeout(() => process.exit(0), 2000);
+  setTimeout(() => process.exit(0), 1000);
 }
 
 process.on('SIGINT', cleanup);
