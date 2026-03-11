@@ -55,13 +55,16 @@ function generateLog2Sequence() {
 }
 
 // ============================================================================
-// ESCENARIO 2: STRESS (20 servicios con 80% incompletos)
+// ESCENARIO 2: STRESS (20 servicios + RESET + 6 servicios sin reset)
 // ============================================================================
 function generateStressSequence() {
   const sequence = [];
   const INCOMPLETE_SERVICES = 16;
   const COMPLETE_SERVICES = 4;
+  const PHASE2_INCOMPLETE = 5;
+  const PHASE2_COMPLETE = 1;
   
+  // ========== FASE 1: 20 servicios + Reset ==========
   // Servicios incompletos (2 mensajes cada uno)
   for (let i = 0; i < INCOMPLETE_SERVICES; i++) {
     sequence.push({ dvs: 3, log: 8, sidIndex: i, includeSid: true });
@@ -89,8 +92,34 @@ function generateStressSequence() {
     });
   }
   
-  // Reset final
-  sequence.push({ dvs: 4, log: 2, sidIndex: null, includeSid: false });
+  // Reset (finaliza fase 1)
+  sequence.push({ dvs: 4, log: 2, sidIndex: null, includeSid: false, phase1End: true });
+  
+  // ========== PAUSA entre fases (8 segundos) ==========
+  sequence.push({ pause: true, duration: 8000, phase2Start: true });
+  
+  // ========== FASE 2: 6 servicios sin reset ==========
+  const phase2Offset = INCOMPLETE_SERVICES + COMPLETE_SERVICES;
+  
+  // Servicios incompletos fase 2 (2 mensajes cada uno)
+  for (let i = 0; i < PHASE2_INCOMPLETE; i++) {
+    const sidIndex = phase2Offset + i;
+    sequence.push({ dvs: 3, log: 8, sidIndex: sidIndex, includeSid: true });
+    sequence.push({ dvs: 3, log: 1, sidIndex: sidIndex, includeSid: true });
+  }
+  
+  // Servicios completos fase 2 (10 mensajes)
+  for (let i = 0; i < PHASE2_COMPLETE; i++) {
+    const sidIndex = phase2Offset + PHASE2_INCOMPLETE + i;
+    completeSequence.forEach(msg => {
+      sequence.push({
+        dvs: msg.dvs,
+        log: msg.log,
+        sidIndex: sidIndex,
+        includeSid: true
+      });
+    });
+  }
   
   return sequence;
 }
@@ -99,12 +128,13 @@ function generateStressSequence() {
 if (SCENARIO === 'stress') {
   TEST_SEQUENCE = generateStressSequence();
   SCENARIO_CONFIG = {
-    name: 'STRESS TEST',
-    description: '20 servicios (16 incompletos + 4 completados)',
+    name: 'STRESS TEST EXTENDIDO',
+    description: 'Fase 1: 20 servicios + Reset | Fase 2: 6 servicios sin reset',
     delay: 800,
-    totalServices: 20,
-    incompleteServices: 16,
-    completeServices: 4
+    totalServices: 26,
+    phase1: { incomplete: 16, complete: 4, total: 20, hasReset: true },
+    phase2: { incomplete: 5, complete: 1, total: 6, hasReset: false },
+    pauseDuration: 8000
   };
 } else {
   TEST_SEQUENCE = generateLog2Sequence();
@@ -209,27 +239,30 @@ function publishMessage(step, stepIndex) {
 
 // Enviar mensajes secuencialmente
 function sendMessagesSequentially() {
-  console.log(`\n📋 Total mensajes: ${TEST_SEQUENCE.length}`);
+  console.log(`\n📋 Total items: ${TEST_SEQUENCE.length}`);
   console.log(`⏱️  Intervalo: ${SCENARIO_CONFIG.delay}ms`);
   console.log(`📤 Enviando...\n`);
   console.log('═══════════════════════════════════════════════════════════════\n');
   
+  let cumulativeDelay = 0;
+  
   TEST_SEQUENCE.forEach((step, index) => {
+    // Si es una pausa
+    if (step.pause) {
+      cumulativeDelay += step.duration;
+      
+      setTimeout(() => {
+        console.log(`\n⏸️  PAUSA: Esperando ${step.duration / 1000} segundos...`);
+        console.log(`📍 Fase 2: Nuevos servicios están siendo creados sin reset posterior\n`);
+      }, cumulativeDelay - step.duration);
+      
+      return;
+    }
+    
     // Manejo de mensajes simultáneos (solo para LOG-2)
     if (step.simultaneous && index > 0 && TEST_SEQUENCE[index - 1].simultaneous) {
-      const previousDelay = (index - 1) * SCENARIO_CONFIG.delay;
-      setTimeout(() => {
-        publishMessage(step, index);
-        if (index === TEST_SEQUENCE.length - 1) {
-          setTimeout(() => {
-            console.log('\n═══════════════════════════════════════════════════════════════');
-            console.log('✅ Todos los mensajes completados. Terminando...\n');
-            cleanup();
-          }, 1000);
-        }
-      }, previousDelay);
-    } else if (!step.simultaneous || index === 0 || !TEST_SEQUENCE[index - 1].simultaneous) {
-      const delay = index * SCENARIO_CONFIG.delay;
+      const previousStepDelay = index > 1 ? (index - 1) * SCENARIO_CONFIG.delay : 0;
+      const delay = cumulativeDelay + previousStepDelay;
       
       setTimeout(() => {
         publishMessage(step, index);
@@ -241,6 +274,30 @@ function sendMessagesSequentially() {
           }, 1000);
         }
       }, delay);
+    } else if (!step.simultaneous || index === 0 || !TEST_SEQUENCE[index - 1].simultaneous) {
+      let messageDelay = 0;
+      
+      // Calcular delay basado en índices anteriores no-pausa
+      let nonPauseCount = 0;
+      for (let i = 0; i < index; i++) {
+        if (!TEST_SEQUENCE[i].pause) {
+          nonPauseCount++;
+        }
+      }
+      
+      messageDelay = nonPauseCount * SCENARIO_CONFIG.delay;
+      const totalDelay = cumulativeDelay + messageDelay;
+      
+      setTimeout(() => {
+        publishMessage(step, index);
+        if (index === TEST_SEQUENCE.length - 1) {
+          setTimeout(() => {
+            console.log('\n═══════════════════════════════════════════════════════════════');
+            console.log('✅ Todos los mensajes completados. Terminando...\n');
+            cleanup();
+          }, 1000);
+        }
+      }, totalDelay);
     }
   });
 }
@@ -291,13 +348,33 @@ function cleanup() {
   
   client.end(false, () => {
     console.log('✅ Conexión cerrada correctamente');
-    console.log(`📊 Mensajes enviados: ${messageCount}/${TEST_SEQUENCE.length}`);
+    console.log(`📊 Total enviados: ${messageCount}`);
     console.log('\n📈 Resumen:');
     console.log(`   • Escenario: ${SCENARIO_CONFIG.name}`);
-    console.log(`   • Total servicios: ${SCENARIO_CONFIG.totalServices}`);
-    console.log(`   • Servicios incompletos (cancelados): ${SCENARIO_CONFIG.incompleteServices}`);
-    console.log(`   • Servicios completados (permanecen): ${SCENARIO_CONFIG.completeServices}`);
-    console.log(`   • Reset enviado: LOG:2 con SID:0, LAT:0, LON:0`);
+    
+    if (SCENARIO_CONFIG.phase1) {
+      // Stress test con dos fases
+      console.log(`\n   FASE 1 (con reset):`);
+      console.log(`   • Servicios incompletos: ${SCENARIO_CONFIG.phase1.incomplete} (cancelados por reset)`);
+      console.log(`   • Servicios completados: ${SCENARIO_CONFIG.phase1.complete}`);
+      console.log(`   • Reset: LOG:2 con SID:0, LAT:0, LON:0`);
+      
+      console.log(`\n   PAUSA: ${SCENARIO_CONFIG.pauseDuration / 1000} segundos`);
+      
+      console.log(`\n   FASE 2 (sin reset):`);
+      console.log(`   • Servicios incompletos: ${SCENARIO_CONFIG.phase2.incomplete} (permanecen activos)`);
+      console.log(`   • Servicios completados: ${SCENARIO_CONFIG.phase2.complete}`);
+      console.log(`   • Total fase 2: ${SCENARIO_CONFIG.phase2.total} servicios`);
+      
+      console.log(`\n   TOTAL: ${SCENARIO_CONFIG.totalServices} servicios`);
+    } else {
+      // LOG-2 test
+      console.log(`   • Total servicios: ${SCENARIO_CONFIG.totalServices}`);
+      console.log(`   • Servicios incompletos (cancelados): ${SCENARIO_CONFIG.incompleteServices}`);
+      console.log(`   • Servicios completados (permanecen): ${SCENARIO_CONFIG.completeServices}`);
+      console.log(`   • Reset enviado: LOG:2 con SID:0, LAT:0, LON:0`);
+    }
+    
     process.exit(0);
   });
   
