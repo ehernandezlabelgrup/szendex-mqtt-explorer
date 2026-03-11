@@ -121,6 +121,50 @@ function generateStressSequence() {
     });
   }
   
+  // ========== PAUSA entre fases (8 segundos) ==========
+  sequence.push({ pause: true, duration: 8000, phase3Start: true });
+  
+  // ========== FASE 3: 7 servicios con LOG especiales ==========
+  const phase3Offset = phase2Offset + PHASE2_INCOMPLETE + PHASE2_COMPLETE;
+  
+  // Servicio 1: Incompleto (no finaliza)
+  sequence.push({ dvs: 3, log: 8, sidIndex: phase3Offset, includeSid: true });
+  sequence.push({ dvs: 3, log: 1, sidIndex: phase3Offset, includeSid: true });
+  
+  // Servicio 2: Con LOG 11 a mitad
+  sequence.push({ dvs: 3, log: 8, sidIndex: phase3Offset + 1, includeSid: true });
+  sequence.push({ dvs: 4, log: 11, sidIndex: phase3Offset + 1, includeSid: true });
+  sequence.push({ dvs: 4, log: 1, sidIndex: phase3Offset + 1, includeSid: true });
+  
+  // Servicio 3: Con LOG 24 a mitad
+  sequence.push({ dvs: 3, log: 8, sidIndex: phase3Offset + 2, includeSid: true });
+  sequence.push({ dvs: 6, log: 24, sidIndex: phase3Offset + 2, includeSid: true });
+  sequence.push({ dvs: 6, log: 1, sidIndex: phase3Offset + 2, includeSid: true });
+  
+  // Servicio 4: Completo (finaliza)
+  completeSequence.forEach(msg => {
+    sequence.push({
+      dvs: msg.dvs,
+      log: msg.log,
+      sidIndex: phase3Offset + 3,
+      includeSid: true
+    });
+  });
+  
+  // Servicio 5: Incompleto (no finaliza)
+  sequence.push({ dvs: 3, log: 8, sidIndex: phase3Offset + 4, includeSid: true });
+  sequence.push({ dvs: 3, log: 1, sidIndex: phase3Offset + 4, includeSid: true });
+  
+  // Servicio 6: Completo (finaliza)
+  completeSequence.forEach(msg => {
+    sequence.push({
+      dvs: msg.dvs,
+      log: msg.log,
+      sidIndex: phase3Offset + 5,
+      includeSid: true
+    });
+  });
+  
   return sequence;
 }
 
@@ -128,12 +172,13 @@ function generateStressSequence() {
 if (SCENARIO === 'stress') {
   TEST_SEQUENCE = generateStressSequence();
   SCENARIO_CONFIG = {
-    name: 'STRESS TEST EXTENDIDO',
-    description: 'Fase 1: 20 servicios + Reset | Fase 2: 6 servicios sin reset',
+    name: 'STRESS TEST ULTRA EXTENDIDO',
+    description: '3 fases: 20 + reset, 6 sin reset, 6 con LOG especiales',
     delay: 800,
-    totalServices: 26,
+    totalServices: 32,
     phase1: { incomplete: 16, complete: 4, total: 20, hasReset: true },
     phase2: { incomplete: 5, complete: 1, total: 6, hasReset: false },
+    phase3: { incomplete: 4, complete: 2, total: 6, hasReset: false },
     pauseDuration: 8000
   };
 } else {
@@ -353,7 +398,7 @@ function cleanup() {
     console.log(`   • Escenario: ${SCENARIO_CONFIG.name}`);
     
     if (SCENARIO_CONFIG.phase1) {
-      // Stress test con dos fases
+      // Stress test con tres fases
       console.log(`\n   FASE 1 (con reset):`);
       console.log(`   • Servicios incompletos: ${SCENARIO_CONFIG.phase1.incomplete} (cancelados por reset)`);
       console.log(`   • Servicios completados: ${SCENARIO_CONFIG.phase1.complete}`);
@@ -365,6 +410,14 @@ function cleanup() {
       console.log(`   • Servicios incompletos: ${SCENARIO_CONFIG.phase2.incomplete} (permanecen activos)`);
       console.log(`   • Servicios completados: ${SCENARIO_CONFIG.phase2.complete}`);
       console.log(`   • Total fase 2: ${SCENARIO_CONFIG.phase2.total} servicios`);
+      
+      console.log(`\n   PAUSA: ${SCENARIO_CONFIG.pauseDuration / 1000} segundos`);
+      
+      console.log(`\n   FASE 3 (logs especiales, sin reset):`);
+      console.log(`   • Servicios incompletos: ${SCENARIO_CONFIG.phase3.incomplete} (permanecen activos)`);
+      console.log(`     - 2 servicios con LOG especiales (LOG:11, LOG:24)`);
+      console.log(`   • Servicios completados: ${SCENARIO_CONFIG.phase3.complete}`);
+      console.log(`   • Total fase 3: ${SCENARIO_CONFIG.phase3.total} servicios`);
       
       console.log(`\n   TOTAL: ${SCENARIO_CONFIG.totalServices} servicios`);
     } else {
