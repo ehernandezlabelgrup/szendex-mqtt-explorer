@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node mqtt-listener.js",
     "publish": "node mqtt-publisher.js",
-    "publish:test": "node test-log-2.js",
-    "publish:stress": "node test-stress.js",
+    "test:log2": "node test-publisher.js log2",
+    "test:stress": "node test-publisher.js stress",
     "listener": "node mqtt-listener.js",
     "explorer": "node mqtt-explorer-listener.js",
     "search": "node search-logs.js",
